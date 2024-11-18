@@ -1,5 +1,5 @@
 import "./App.css";
-import { useRef } from "react";
+import { useRef, useState } from "react";
 import { useDispatch, useSelector } from "react-redux";
 import {
   addTodo,
@@ -8,7 +8,7 @@ import {
 } from "./config/redux/reducers/todoSlice";
 const App = () => {
   const input = useRef();
-
+  const [edit, setEdit] = useState(null);
   //data bulane ke liye
   const selector = useSelector((state) => state.todos.todos);
   console.log(selector);
@@ -19,12 +19,26 @@ const App = () => {
   const addData = (e) => {
     e.preventDefault();
     if (input.current.value.trim()) {
+      if (edit) {
+        dispatch(
+          editTodo({
+            id: edit.id,
+            title: input.current.value,
+          })
+        );
+        setEdit(null);
+        input.current.value = "";
+        return;
+      }
       dispatch(
         addTodo({
           title: input.current.value,
         })
       );
       input.current.value = "";
+    } else {
+      input.current.value = "";
+      setEdit(null);
     }
   };
 
@@ -34,17 +48,9 @@ const App = () => {
   };
 
   const editData = (item) => {
-    const editVal = prompt("Enter Edit Todo : ", item.title);
-    if (editVal.trim()) {
-      dispatch(
-        editTodo({
-          id: item.id,
-          title: editVal,
-        })
-      );
-    } else {
-      alert("Enter a valid todo");
-    }
+    setEdit(item);
+    input.current.value = item.title;
+    input.current.select();
   };
 
   return (
@@ -54,7 +60,7 @@ const App = () => {
         <form onSubmit={(e) => addData(e)} style={styles.form}>
           <input type="text" required ref={input} style={styles.input} />
           <button type="submit" style={styles.button}>
-            Submit
+            {edit ? "Edit" : "Submit"}
           </button>
         </form>
         <div style={styles.listContainer}>
